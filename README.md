@@ -1,4 +1,4 @@
-# Fintrack — Smart Expense & Budget Management System
+# Smart Expense & Budget Management System
 
 A polished, fully client-side personal finance app to track expenses and income,
 plan budgets, set savings goals, and understand your spending with rich analytics.
