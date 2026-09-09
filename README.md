@@ -1,4 +1,4 @@
-# FinWise — Smart Expense & Budget Management System
+# Smart Expense & Budget Management System
 
 A polished, privacy-first personal finance app. Track income and expenses, set
 per-category budgets, and get automatic, personalized insights into your spending.
