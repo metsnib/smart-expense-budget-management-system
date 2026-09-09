@@ -1,31 +1,12 @@
 {
-  "name": "smart-expense-budget-management-system",
+  "name": "fintrack-expense-budget",
   "private": true,
-  "version": "1.0.0",
-  "type": "module",
+  "version": "2.0.0",
+  "description": "Fintrack — Smart Expense & Budget Management System built with plain HTML, CSS, JavaScript and a Python (Flask) backend.",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:preview": "vite build --config vite.singlefile.config.ts",
-    "preview": "vite preview",
-    "lint": "eslint ."
-  },
-  "dependencies": {
-    "date-fns": "^3.6.0",
-    "lucide-react": "^0.451.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "recharts": "^2.12.7"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.2",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.8",
-    "vite-plugin-singlefile": "^2.0.2"
+    "build": "node build.js",
+    "build:preview": "node build.js",
+    "serve": "python3 -m http.server 8000",
+    "start": "python3 server.py"
   }
 }

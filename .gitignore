@@ -1,15 +1,28 @@
+# dependencies
 node_modules
+
+# build output
 dist
 dist-preview
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# app database (created at runtime by server.py)
+fintrack.db
+
+# local env files
 *.local
-.DS_Store
-*.tsbuildinfo
-vite.config.js
-vite.config.d.ts
-vite.singlefile.config.js
-vite.singlefile.config.d.ts
+
+# logs
+npm-debug.log*
+
+# editor
 .vscode/*
 !.vscode/extensions.json
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.idea
+.DS_Store
+*.sw?
