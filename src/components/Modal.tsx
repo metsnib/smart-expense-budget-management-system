@@ -1,22 +1,19 @@
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
-interface ModalProps {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  maxWidth = 'max-w-lg',
+}: {
   open: boolean
   onClose: () => void
   title: string
-  description?: string
   children: ReactNode
-  size?: 'sm' | 'md' | 'lg'
-}
-
-const SIZES = {
-  sm: 'max-w-md',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-}
-
-export function Modal({ open, onClose, title, description, children, size = 'md' }: ModalProps) {
+  maxWidth?: string
+}) {
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -33,9 +30,9 @@ export function Modal({ open, onClose, title, description, children, size = 'md'
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
@@ -43,15 +40,10 @@ export function Modal({ open, onClose, title, description, children, size = 'md'
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative z-10 w-full ${SIZES[size]} max-h-[92vh] overflow-y-auto rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl animate-slide-up sm:rounded-2xl sm:p-6 dark:border-slate-800 dark:bg-slate-900`}
+        className={`relative z-10 w-full ${maxWidth} animate-scale-in overflow-hidden rounded-t-2xl bg-white shadow-xl dark:bg-slate-900 sm:rounded-2xl`}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
-            {description && (
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
-            )}
-          </div>
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
@@ -60,7 +52,7 @@ export function Modal({ open, onClose, title, description, children, size = 'md'
             <X className="h-5 w-5" />
           </button>
         </div>
-        {children}
+        <div className="max-h-[75vh] overflow-y-auto px-5 py-5">{children}</div>
       </div>
     </div>
   )

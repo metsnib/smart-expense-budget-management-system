@@ -1,49 +1,52 @@
-export type TransactionType = 'income' | 'expense'
+export type TransactionType = 'expense' | 'income'
+
+export interface Category {
+  id: string
+  name: string
+  icon: string // lucide icon key
+  color: string // hex color
+  type: TransactionType
+}
 
 export interface Transaction {
   id: string
   type: TransactionType
   amount: number
   categoryId: string
-  date: string // ISO yyyy-mm-dd
   note: string
-  account: string
+  date: string // ISO date string (yyyy-MM-dd)
   createdAt: string // ISO timestamp
 }
 
-export interface Category {
-  id: string
-  name: string
-  type: TransactionType
-  icon: string // lucide icon key
-  color: string // hex
-}
-
+/** A recurring budget defined per category, evaluated per calendar month. */
 export interface Budget {
   id: string
   categoryId: string
   amount: number // monthly limit
+  createdAt: string
+}
+
+export interface SavingsGoal {
+  id: string
+  name: string
+  target: number
+  saved: number
+  color: string
+  createdAt: string
 }
 
 export interface Settings {
   currency: string
   locale: string
-  theme: 'light' | 'dark'
+  theme: 'light' | 'dark' | 'system'
   monthlyIncomeTarget: number
-  savingsGoalRate: number // percentage 0-100
 }
 
 export interface AppData {
+  version: number
   transactions: Transaction[]
-  categories: Category[]
   budgets: Budget[]
+  categories: Category[]
+  goals: SavingsGoal[]
   settings: Settings
-  onboarded: boolean
 }
-
-export type Page =
-  | 'dashboard'
-  | 'transactions'
-  | 'budgets'
-  | 'analytics'
-  | 'settings'

@@ -1,221 +1,215 @@
-import { useMemo, useState } from 'react'
-import {
-  BarChart3,
-  LayoutDashboard,
-  Menu,
-  Plus,
-  Receipt,
-  Settings as SettingsIcon,
-  Target,
-  Wallet,
-} from 'lucide-react'
-import type { Page } from './types'
+import { useState } from 'react'
+import { Menu, Plus, Sun, Moon, TrendingUp } from 'lucide-react'
+import { NAV_ITEMS, type ViewId } from './nav'
 import { useApp } from './store/AppContext'
-import { TransactionModal } from './components/TransactionModal'
-import { Onboarding } from './pages/Onboarding'
-import { Dashboard } from './pages/Dashboard'
-import { Transactions } from './pages/Transactions'
-import { Budgets } from './pages/Budgets'
-import { Analytics } from './pages/Analytics'
-import { Settings } from './pages/Settings'
+import { ToastProvider, useToast } from './components/Toast'
+import { Modal } from './components/Modal'
+import { TransactionForm } from './components/TransactionForm'
+import { MonthPicker } from './components/MonthPicker'
+import { currentMonthKey } from './utils/format'
+import { Dashboard } from './views/Dashboard'
+import { Transactions } from './views/Transactions'
+import { Budgets } from './views/Budgets'
+import { Analytics } from './views/Analytics'
+import { Goals } from './views/Goals'
+import { Categories } from './views/Categories'
+import { SettingsView } from './views/Settings'
+import type { Transaction } from './types'
 
-const NAV: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'transactions', label: 'Transactions', icon: Receipt },
-  { id: 'budgets', label: 'Budgets', icon: Target },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
-]
+const VIEW_META: Record<ViewId, { title: string; subtitle: string; showMonth: boolean }> = {
+  dashboard: { title: 'Dashboard', subtitle: 'Your financial overview at a glance', showMonth: true },
+  transactions: { title: 'Transactions', subtitle: 'Every income and expense you record', showMonth: true },
+  budgets: { title: 'Budgets', subtitle: 'Set limits and track your spending', showMonth: true },
+  analytics: { title: 'Analytics', subtitle: 'Understand your spending patterns', showMonth: true },
+  goals: { title: 'Savings Goals', subtitle: 'Plan and track your financial goals', showMonth: false },
+  categories: { title: 'Categories', subtitle: 'Manage your transaction categories', showMonth: false },
+  settings: { title: 'Settings', subtitle: 'Preferences and data management', showMonth: false },
+}
 
-export default function App() {
-  const { data } = useApp()
-  const [page, setPage] = useState<Page>('dashboard')
+function Shell() {
+  const { data, addTransaction, updateSettings } = useApp()
+  const { notify } = useToast()
+  const [view, setView] = useState<ViewId>('dashboard')
+  const [month, setMonth] = useState<string>(currentMonthKey())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
-  const currentLabel = useMemo(
-    () => NAV.find((n) => n.id === page)?.label ?? 'Dashboard',
-    [page],
-  )
+  const meta = VIEW_META[view]
 
-  if (!data.onboarded) {
-    return <Onboarding />
+  const isDark = (() => {
+    const theme = data.settings.theme
+    if (theme === 'dark') return true
+    if (theme === 'light') return false
+    return typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false
+  })()
+
+  const toggleTheme = () => {
+    updateSettings({ theme: isDark ? 'light' : 'dark' })
   }
 
-  const navigate = (p: Page) => {
-    setPage(p)
-    setMobileNavOpen(false)
+  const handleAdd = (payload: Omit<Transaction, 'id' | 'createdAt'>) => {
+    addTransaction(payload)
+    notify('Transaction added')
+    setAddOpen(false)
+  }
+
+  const go = (v: ViewId) => {
+    setView(v)
+    setSidebarOpen(false)
   }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Sidebar (desktop) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white px-4 py-6 lg:flex dark:border-slate-800 dark:bg-slate-900">
-        <Brand />
-        <nav className="mt-8 flex flex-1 flex-col gap-1">
-          {NAV.map((item) => (
-            <NavButton
-              key={item.id}
-              active={page === item.id}
-              icon={<item.icon className="h-5 w-5" />}
-              label={item.label}
-              onClick={() => navigate(item.id)}
-            />
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white px-4 py-5 dark:border-slate-800 dark:bg-slate-900 lg:flex">
+        <BrandHeader />
+        <nav className="mt-6 flex-1 space-y-1">
+          {NAV_ITEMS.map((item) => (
+            <NavButton key={item.id} item={item} active={view === item.id} onClick={() => go(item.id)} />
           ))}
         </nav>
-        <button onClick={() => setAddOpen(true)} className="btn-primary w-full">
-          <Plus className="h-4 w-4" />
-          Add transaction
-        </button>
+        <SidebarFooter transactionCount={data.transactions.length} />
       </aside>
 
-      {/* Mobile nav drawer */}
-      {mobileNavOpen && (
+      {/* Mobile sidebar */}
+      {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div
-            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in"
-            onClick={() => setMobileNavOpen(false)}
-          />
-          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-slate-200 bg-white px-4 py-6 animate-slide-up dark:border-slate-800 dark:bg-slate-900">
-            <Brand />
-            <nav className="mt-8 flex flex-1 flex-col gap-1">
-              {NAV.map((item) => (
-                <NavButton
-                  key={item.id}
-                  active={page === item.id}
-                  icon={<item.icon className="h-5 w-5" />}
-                  label={item.label}
-                  onClick={() => navigate(item.id)}
-                />
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[80vw] animate-scale-in flex-col border-r border-slate-200 bg-white px-4 py-5 dark:border-slate-800 dark:bg-slate-900">
+            <BrandHeader />
+            <nav className="mt-6 flex-1 space-y-1">
+              {NAV_ITEMS.map((item) => (
+                <NavButton key={item.id} item={item} active={view === item.id} onClick={() => go(item.id)} />
               ))}
             </nav>
+            <SidebarFooter transactionCount={data.transactions.length} />
           </aside>
         </div>
       )}
 
-      {/* Main content */}
+      {/* Main */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-lg sm:px-6 dark:border-slate-800 dark:bg-slate-950/70">
-          <button
-            onClick={() => setMobileNavOpen(true)}
-            className="btn-ghost -ml-2 p-2 lg:hidden"
-            aria-label="Open menu"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white">{currentLabel}</h1>
-          <button onClick={() => setAddOpen(true)} className="btn-primary ml-auto hidden sm:inline-flex">
-            <Plus className="h-4 w-4" />
-            Add
-          </button>
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+            <button
+              className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-lg font-semibold text-slate-900 dark:text-white sm:text-xl">
+                {meta.title}
+              </h1>
+              <p className="hidden truncate text-sm text-slate-500 dark:text-slate-400 sm:block">{meta.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {meta.showMonth && (
+                <div className="hidden sm:block">
+                  <MonthPicker value={month} onChange={setMonth} />
+                </div>
+              )}
+              <button
+                onClick={toggleTheme}
+                className="rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                aria-label="Toggle theme"
+              >
+                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+              <button className="btn-primary" onClick={() => setAddOpen(true)}>
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add</span>
+              </button>
+            </div>
+          </div>
+          {meta.showMonth && (
+            <div className="border-t border-slate-200 px-4 py-2 dark:border-slate-800 sm:hidden">
+              <MonthPicker value={month} onChange={setMonth} />
+            </div>
+          )}
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
-          <div key={page} className="animate-fade-in">
-            {page === 'dashboard' && <Dashboard onNavigate={navigate} onAdd={() => setAddOpen(true)} />}
-            {page === 'transactions' && <Transactions onAdd={() => setAddOpen(true)} />}
-            {page === 'budgets' && <Budgets />}
-            {page === 'analytics' && <Analytics />}
-            {page === 'settings' && <Settings />}
+        {/* Content */}
+        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+          <div key={view} className="animate-fade-in">
+            {view === 'dashboard' && (
+              <Dashboard month={month} onAddTransaction={() => setAddOpen(true)} onNavigate={go} />
+            )}
+            {view === 'transactions' && <Transactions month={month} />}
+            {view === 'budgets' && <Budgets month={month} />}
+            {view === 'analytics' && <Analytics month={month} />}
+            {view === 'goals' && <Goals />}
+            {view === 'categories' && <Categories />}
+            {view === 'settings' && <SettingsView />}
           </div>
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-slate-200 bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden dark:border-slate-800 dark:bg-slate-950/85">
-        {NAV.slice(0, 2).map((item) => (
-          <BottomNavButton
-            key={item.id}
-            active={page === item.id}
-            icon={<item.icon className="h-5 w-5" />}
-            label={item.label}
-            onClick={() => navigate(item.id)}
-          />
-        ))}
-        <button
-          onClick={() => setAddOpen(true)}
-          className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-600/30 transition active:scale-95"
-          aria-label="Add transaction"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-        {NAV.slice(2, 4).map((item) => (
-          <BottomNavButton
-            key={item.id}
-            active={page === item.id}
-            icon={<item.icon className="h-5 w-5" />}
-            label={item.label}
-            onClick={() => navigate(item.id)}
-          />
-        ))}
-      </nav>
-
-      <TransactionModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add transaction">
+        <TransactionForm onSubmit={handleAdd} onCancel={() => setAddOpen(false)} />
+      </Modal>
     </div>
   )
 }
 
-function Brand() {
+function BrandHeader() {
   return (
-    <div className="flex items-center gap-2.5 px-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-violet-500 text-white shadow-md shadow-brand-500/30">
-        <Wallet className="h-5 w-5" />
-      </div>
-      <div>
-        <p className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">FinWise</p>
-        <p className="-mt-0.5 text-[11px] font-medium text-slate-400">Expense & Budget</p>
+    <div className="flex items-center gap-2.5 px-1">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
+        <TrendingUp className="h-5 w-5" />
+      </span>
+      <div className="leading-tight">
+        <p className="text-base font-bold tracking-tight text-slate-900 dark:text-white">Fintrack</p>
+        <p className="text-[11px] font-medium text-slate-400">Expense & Budget</p>
       </div>
     </div>
   )
 }
 
 function NavButton({
+  item,
   active,
-  icon,
-  label,
   onClick,
 }: {
+  item: (typeof NAV_ITEMS)[number]
   active: boolean
-  icon: React.ReactNode
-  label: string
   onClick: () => void
 }) {
+  const Icon = item.icon
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
         active
-          ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
+          ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
+          : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
       }`}
     >
-      {icon}
-      {label}
+      <Icon className={`h-5 w-5 ${active ? 'text-brand-600 dark:text-brand-400' : ''}`} />
+      {item.label}
     </button>
   )
 }
 
-function BottomNavButton({
-  active,
-  icon,
-  label,
-  onClick,
-}: {
-  active: boolean
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-}) {
+function SidebarFooter({ transactionCount }: { transactionCount: number }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition ${
-        active ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400 dark:text-slate-500'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
+    <div className="mt-4 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 p-4 text-white">
+      <p className="text-sm font-semibold">Stay on budget 💪</p>
+      <p className="mt-1 text-xs text-brand-100">
+        You've logged {transactionCount} transaction{transactionCount === 1 ? '' : 's'}. Keep it up!
+      </p>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <Shell />
+    </ToastProvider>
   )
 }

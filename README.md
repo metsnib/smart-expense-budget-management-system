@@ -1,29 +1,25 @@
-# Smart Expense & Budget Management System
+# Fintrack — Smart Expense & Budget Management System
 
-A polished, privacy-first personal finance app. Track income and expenses, set
-per-category budgets, and get automatic, personalized insights into your spending.
-All data lives locally in your browser — nothing is sent to a server.
-
-Built with **Vite + React + TypeScript + Tailwind CSS**.
+A polished, fully client-side personal finance app to track expenses and income,
+plan budgets, set savings goals, and understand your spending with rich analytics.
+Built with **Vite + React + TypeScript + Tailwind CSS**. All data is stored
+privately in your browser via `localStorage` — no account or server required.
 
 ## Features
 
-- **Dashboard** — total balance, monthly income/expenses, savings rate, cash-flow
-  chart (income vs expenses over 6 months), top-categories donut, budget progress,
-  smart insights and recent activity. Browse any past month.
-- **Transactions** — add / edit / delete income & expenses with category, account,
-  date and notes. Full-text search, type & category filters, and day-by-day grouping.
-- **Budgets** — set monthly spending limits per category with live progress bars and
-  over/near-limit warnings.
-- **Analytics** — period selector (this month, last month, 3 months, this year),
-  income-vs-expense bars, spending-by-category breakdown, daily spending trend,
-  largest expenses and spend-by-account.
-- **Smart insights** — automatically generated tips: savings-rate vs goal, spending
-  trend vs last month, exceeded/near budgets, top categories, budget suggestions and
-  subscription detection.
-- **Settings** — currency (15 options), light/dark theme, income target & savings
-  goal, custom categories (icon + color), plus JSON export/import, sample data and reset.
-- **Persistence** — everything is stored in `localStorage`; export a JSON backup anytime.
+- **Dashboard** — income, expenses, net balance, and savings-rate KPIs with
+  month-over-month change, a 6-month cash-flow chart, spending mix donut,
+  budget progress, recent activity, and auto-generated *Smart Insights*.
+- **Transactions** — add / edit / delete income & expenses, search, filter by
+  type / category / month, sort, day-grouped list, running totals, and CSV export.
+- **Budgets** — set monthly limits per category with live progress bars and
+  on-track / warning / over-budget states.
+- **Analytics** — income-vs-expense trends (6/12 months), category breakdown
+  bars, distribution donut, cumulative spend area chart, and a detailed table.
+- **Savings Goals** — track targets, add / withdraw funds, and see progress.
+- **Categories** — customizable categories with icons and colors.
+- **Settings** — currency, theme (light / dark / system), monthly income target,
+  JSON backup export & import, load demo data, and clear all.
 
 ## Getting started
 
@@ -35,19 +31,20 @@ npm run build    # type-check + production build
 
 ## Preview build
 
-A single, fully self-contained HTML file (all JS/CSS inlined, zero external requests)
-can be produced for sharing/previewing:
-
 ```bash
-npm run build:preview   # emits dist-preview/index.html
+npm run build:preview   # emits a single self-contained dist-preview/index.html
 ```
+
+This produces one standalone HTML file with all JS and CSS inlined.
 
 ## Tech
 
-- React 18 + TypeScript (strict)
+- React 18 + TypeScript
+- Vite 5
 - Tailwind CSS 3
-- Recharts (charts)
-- lucide-react (icons)
-- date-fns (dates)
+- Recharts (charts) · lucide-react (icons) · date-fns (dates)
 
-No backend, no accounts, no tracking — your financial data never leaves your device.
+## Data & privacy
+
+Everything lives in your browser's local storage. Use **Settings → Export backup**
+to save a JSON snapshot, and **Import backup** to restore it on any device.
